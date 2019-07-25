@@ -16,7 +16,7 @@ GEXTURES.GREATERTHAN = '>';
 GEXTURES.recognize = function (coords) {
     if (coords.length < 3) return undefined;
 
-    let step = 1; // step used compute a vector betwee coords at i and i+step
+    let step = 1; // step used to compute a vector betwee coords at i and i+step
     let numSignSwitches = 0; // the # of times the tangent of a vector changes the sign
     let signedIndexSum = 0; // sum(i * sign)--a metric to quantify the distribution of signs
     for (let i = 0, sign = Math.NaN; i < coords.length - step; i++) {
@@ -24,7 +24,7 @@ GEXTURES.recognize = function (coords) {
 
         if (vector.y == 0) continue; // two coords too close, continue
 
-        var signCurrent = Math.sign(vector.x / vector.y);
+        let signCurrent = Math.sign(vector.x / vector.y);
 
         // initializing the first sign value
         if (isNaN(sign) && signCurrent != 0) {
