@@ -8,6 +8,7 @@ cd gextures-master
 chmod 755 serverup
 ./serverup 8888
 ```
+(If you use Pythong 3 or later versions, you might have trouble running ```serverup```. For this specific project, you can alternatively open the ```index.html``` file in your browser to run the app.)
 
 Open a browser (preferrably with a debugger), and navigate to http://127.0.0.1:8888.
 
