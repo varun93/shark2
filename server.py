@@ -15,6 +15,7 @@ from flask import render_template
 import time
 import json
 import numpy
+import math
 
 
 app = Flask(__name__)
@@ -43,7 +44,7 @@ for line in content:
 
 
 def calculate_distance(X1, Y1, X2, Y2):
-    return sqrt((X2 - X1)**2 + (Y2 - Y1)**2)
+    return math.sqrt((X2 - X1)**2 + (Y2 - Y1)**2)
 
 '''
  Uniformly Sample n points between two points  
@@ -51,7 +52,7 @@ def calculate_distance(X1, Y1, X2, Y2):
  with the change in function name 
 '''
 def get_equidistant_points(X1, Y1, X2, Y2, parts):
-    return list(zip(numpy.linspace(X1, X2, parts+1), numpy.linspace(Y1, Y2, parts+1)))
+    return numpy.linspace(X1, X2, parts+1), numpy.linspace(Y1, Y2, parts+1)
 
 def find_path_length(points_X, points_Y):
     
@@ -86,11 +87,11 @@ def generate_sample_points(points_X, points_Y):
     assert(len(points_X) == len(points_Y))
     assert(len(points_X) >= 2)
 
-    # get path length
-    path_length = find_path_length(points_X, points_Y)
+    # get path length; avoid divide by zero errors
+    path_length = max(0.0000001, find_path_length(points_X, points_Y))
 
     # n points are connected by n - 1 segments
-    total_segements = 99
+    total_segments = 99
     # now get points for each pair of point; every pair would get the number of points proportional to its length against total distance
     length = len(points_X)
 
@@ -99,11 +100,11 @@ def generate_sample_points(points_X, points_Y):
         current_Y = points_Y[index]
         next_X = points_Y[index + 1]
         next_Y = points_Y[index + 1]
-
+        
         pairwise_distance = calculate_distance(current_X, current_Y, next_X, next_Y)
-        # deal with decimals
-        ratio = pairwise_distance // path_length
-        points_in_current_segment = total_segements*ratio
+        ratio = pairwise_distance / path_length
+        # rethink about this; this could yield more points than required
+        points_in_current_segment = math.ceil(total_segments*ratio)
         sampled_X, sampled_Y = get_equidistant_points(current_X, current_Y, next_X, next_Y, points_in_current_segment)
         sample_points_X.extend(sampled_X)
         sample_points_Y.extend(sampled_Y)
@@ -166,7 +167,7 @@ def do_pruning(gesture_points_X, gesture_points_Y, template_sample_points_X, tem
         start_distance = calculate_distance(start_x, end_y, first_gesture_X, first_gesture_Y)
         end_distance = calculate_distance(end_x, end_y, last_gesture_X, last_gesture_Y)
 
-       if start_distance <= threshold and end_distance <= threshold:
+        if start_distance <= threshold and end_distance <= threshold:
            valid_template_sample_points_X.append(curr_template_X)
            valid_template_sample_points_Y.append(curr_template_Y)
            valid_words.append(words[index])
@@ -289,13 +290,12 @@ def get_location_scores(gesture_sample_points_X, gesture_sample_points_Y, valid_
 
     return location_scores
 
-
 def get_integration_scores(shape_scores, location_scores):
     integration_scores = []
     # TODO: Set your own shape weight
     shape_coef = 0.5
     # TODO: Set your own location weight
-    location_coef = 0.5
+    location_coef = 1.0
     for i in range(len(shape_scores)):
         integration_scores.append(shape_coef * shape_scores[i] + location_coef * location_scores[i])
     return integration_scores
@@ -314,10 +314,11 @@ def get_best_word(valid_words, integration_scores):
     '''
     best_word = 'the'
     # TODO: Set your own range.
-    n = 3
+    n = 5
     # TODO: Get the best word (12 points)
+    integration_scores.sort()
 
-    return best_word
+    return " ".join(best_word[:n])
 
 
 @app.route("/")
