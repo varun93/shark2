@@ -14,6 +14,7 @@ from flask import Flask, request
 from flask import render_template
 import time
 import json
+import numpy
 
 
 app = Flask(__name__)
@@ -46,13 +47,15 @@ def calculate_distance(X1, Y1, X2, Y2):
 
 '''
  Uniformly Sample n points between two points  
+ The below function is taken from https://stackoverflow.com/questions/47443037/equidistant-points-between-two-points-in-python
+ with the change in function name 
 '''
-def sample_n_points_in_segment(n,current_X, current_Y, next_X, next_Y):
-    return [], []
+def get_equidistant_points(X1, Y1, X2, Y2, parts):
+    return list(zip(numpy.linspace(X1, X2, parts+1), numpy.linspace(Y1, Y2, parts+1)))
 
 def find_path_length(points_X, points_Y):
+    
     length = len(points_X)
-
     distance = 0
 
     for index in range(length - 1):
@@ -101,7 +104,7 @@ def generate_sample_points(points_X, points_Y):
         # deal with decimals
         ratio = pairwise_distance // path_length
         points_in_current_segment = total_segements*ratio
-        sampled_X, sampled_Y = sample_n_points_in_segment(points_in_current_segment,current_X, current_Y, next_X, next_Y)
+        sampled_X, sampled_Y = get_equidistant_points(current_X, current_Y, next_X, next_Y, points_in_current_segment)
         sample_points_X.extend(sampled_X)
         sample_points_Y.extend(sampled_Y)
 
