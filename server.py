@@ -171,6 +171,20 @@ def do_pruning(gesture_points_X, gesture_points_Y, template_sample_points_X, tem
 
     return valid_words, valid_template_sample_points_X, valid_template_sample_points_Y
 
+# 
+def compute_pairwise_distance(template_X, template_Y, gesture_sample_points_X, gesture_sample_points_Y):
+        
+        distance = 0
+        
+        for sample_index in range(sample_length):
+            template_X = current_template_X[sample_index]
+            template_Y = curr_template_Y[sample_index]
+            gesture_X = gesture_sample_points_X[sample_index]
+            gesture_Y = gesture_sample_points_Y[sample_index]
+
+            distance += calculate_distance(template_X, template_Y, gesture_X, gesture_Y)
+
+        return distance
 
 def get_shape_scores(gesture_sample_points_X, gesture_sample_points_Y, valid_template_sample_points_X, valid_template_sample_points_Y):
     '''Get the shape score for every valid word after pruning.
@@ -206,19 +220,8 @@ def get_shape_scores(gesture_sample_points_X, gesture_sample_points_Y, valid_tem
     for index in range(candidate_length):
         current_template_X = valid_template_sample_points_X[index] 
         current_template_Y = valid_template_sample_points_Y[index]
-        assert(len(current_template_X) == len(current_template_Y))
-
-        distance = 0
-        
-        for sample_index in range(100):
-            template_X = curr_template_X[sample_index]
-            template_Y = curr_template_Y[sample_index]
-            gesture_X = gesture_sample_points_X[sample_index]
-            gesture_Y = gesture_sample_points_Y[sample_index]
-
-            distance += calculate_distance(template_X, template_Y, gesture_X, gesture_Y)
-
-            shape_scores.append(distance // sample_length)
+        pairwise_distance = compute_pairwise_distance(template_X, template_Y, gesture_sample_points_X, gesture_sample_points_Y)
+        shape_scores.append(pairwise_distance // sample_length)
 
     return shape_scores
 
@@ -244,6 +247,42 @@ def get_location_scores(gesture_sample_points_X, gesture_sample_points_Y, valid_
     location_scores = []
     radius = 15
     # TODO: Calculate location scores (12 points)
+
+    assert(len(gesture_sample_points_X) == len(gesture_sample_points_Y))
+    assert(len(valid_template_sample_points_X) == len(valid_template_sample_points_Y))
+    assert(len(gesture_sample_points_X) == len(valid_template_sample_points_X))
+
+    candidate_length = len(gesture_sample_points_X)
+    sample_length = 100
+    
+    for index in range(candidate_length):
+        current_template_X = valid_template_sample_points_X[index] 
+        current_template_Y = valid_template_sample_points_Y[index]
+
+        distance = 0
+
+        for i in range(sample_length):
+            X, Y = current_template_X[i], curr_template_Y[i] 
+            min_distance = float("inf")
+            
+            for j in range(sample_length):
+                template_X = current_template_X[sample_index]
+                template_Y = curr_template_Y[sample_index]
+                distance = calculate_distance(X, Y, template_X, template_Y)
+                min_distance = min(min_distance, distance) 
+
+            gamma_i = max(min_distance - radius, 0)
+            
+            if gamma_i != 0:
+                # using distance as a flag, I know its ugly!
+                distance = 1
+                break
+
+        # now compute the pairwise distance between templates
+        if distance != 0:
+            distance = compute_pairwise_distance(template_X, template_Y, gesture_sample_points_X, gesture_sample_points_Y)
+
+        location_scores.append(distance)
 
     return location_scores
 
