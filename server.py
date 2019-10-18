@@ -40,6 +40,30 @@ for line in content:
         template_points_Y[-1].append(centroids_Y[ord(c) - 97])
 
 
+
+def calculate_distance(X1, Y1, X2, Y2):
+    return sqrt((X2 - X1)**2 + (Y2 - Y1)**2)
+
+'''
+ Uniformly Sample n points between two points  
+'''
+def sample_n_points_in_segment(n,current_X, current_Y, next_X, next_Y):
+    return [], []
+
+def find_path_length(points_X, points_Y):
+    length = len(points_X)
+
+    distance = 0
+
+    for index in range(length - 1):
+        current_X = points_X[index]
+        current_Y = points_Y[index]
+        next_X = points_Y[index + 1]
+        next_Y = points_Y[index + 1]
+        distance += calculate_distance(current_X, current_Y, next_X, next_Y)
+
+    return distance
+
 def generate_sample_points(points_X, points_Y):
     '''Generate 100 sampled points for a gesture.
 
@@ -55,6 +79,31 @@ def generate_sample_points(points_X, points_Y):
     '''
     sample_points_X, sample_points_Y = [], []
     # TODO: Start sampling (12 points)
+
+    assert(len(points_X) == len(points_Y))
+    assert(len(points_X) >= 2)
+
+    # get path length
+    path_length = find_path_length(points_X, points_Y)
+
+    # n points are connected by n - 1 segments
+    total_segements = 99
+    # now get points for each pair of point; every pair would get the number of points proportional to its length against total distance
+    length = len(points_X)
+
+    for index in range(length - 1):
+        current_X = points_X[index]
+        current_Y = points_Y[index]
+        next_X = points_Y[index + 1]
+        next_Y = points_Y[index + 1]
+
+        pairwise_distance = calculate_distance(current_X, current_Y, next_X, next_Y)
+        # deal with decimals
+        ratio = pairwise_distance // path_length
+        points_in_current_segment = total_segements*ratio
+        sampled_X, sampled_Y = sample_n_points_in_segment(points_in_current_segment,current_X, current_Y, next_X, next_Y)
+        sample_points_X.extend(sampled_X)
+        sample_points_Y.extend(sampled_Y)
 
     return sample_points_X, sample_points_Y
 
@@ -146,6 +195,30 @@ def get_shape_scores(gesture_sample_points_X, gesture_sample_points_Y, valid_tem
     L = 1
 
     # TODO: Calculate shape scores (12 points)
+
+    assert(len(gesture_sample_points_X) == len(gesture_sample_points_Y))
+    assert(len(valid_template_sample_points_X) == len(valid_template_sample_points_Y))
+    assert(len(gesture_sample_points_X) == len(valid_template_sample_points_X))
+
+    candidate_length = len(gesture_sample_points_X)
+    sample_length = 100
+    
+    for index in range(candidate_length):
+        current_template_X = valid_template_sample_points_X[index] 
+        current_template_Y = valid_template_sample_points_Y[index]
+        assert(len(current_template_X) == len(current_template_Y))
+
+        distance = 0
+        
+        for sample_index in range(100):
+            template_X = curr_template_X[sample_index]
+            template_Y = curr_template_Y[sample_index]
+            gesture_X = gesture_sample_points_X[sample_index]
+            gesture_Y = gesture_sample_points_Y[sample_index]
+
+            distance += calculate_distance(template_X, template_Y, gesture_X, gesture_Y)
+
+            shape_scores.append(distance // sample_length)
 
     return shape_scores
 
