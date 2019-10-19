@@ -52,7 +52,7 @@ def calculate_distance(X1, Y1, X2, Y2):
  with the change in function name 
 '''
 def get_equidistant_points(X1, Y1, X2, Y2, parts):
-    return numpy.linspace(X1, X2, parts+1), numpy.linspace(Y1, Y2, parts+1)
+    return list(numpy.linspace(X1, X2, parts+1)), list(numpy.linspace(Y1, Y2, parts+1))
 
 def find_path_length(points_X, points_Y):
     
