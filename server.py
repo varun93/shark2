@@ -62,7 +62,7 @@ def find_path_length(points_X, points_Y):
     for index in range(length - 1):
         current_X = points_X[index]
         current_Y = points_Y[index]
-        next_X = points_Y[index + 1]
+        next_X = points_X[index + 1]
         next_Y = points_Y[index + 1]
         distance += calculate_distance(current_X, current_Y, next_X, next_Y)
 
@@ -82,6 +82,7 @@ def generate_sample_points(points_X, points_Y):
         sample_points_Y: A list of Y-axis values of a gesture after sampling, containing 100 elements.
     '''
     sample_points_X, sample_points_Y = [], []
+    # result = []
     # TODO: Start sampling (12 points)
 
     assert(len(points_X) == len(points_Y))
@@ -91,33 +92,46 @@ def generate_sample_points(points_X, points_Y):
     path_length = max(0.0000001, find_path_length(points_X, points_Y))
 
     # n points are connected by n - 1 segments
-    total_segments = 99
+    total_parts = 99
+    current_total_parts = 0
     # now get points for each pair of point; every pair would get the number of points proportional to its length against total distance
     length = len(points_X)
 
     for index in range(length - 1):
         current_X = points_X[index]
         current_Y = points_Y[index]
-        next_X = points_Y[index + 1]
+        next_X = points_X[index + 1]
         next_Y = points_Y[index + 1]
         
         pairwise_distance = calculate_distance(current_X, current_Y, next_X, next_Y)
         ratio = pairwise_distance / path_length
-        # rethink about this; this could yield more points than required
-        points_in_current_segment = math.ceil(total_segments*ratio)
-        sampled_X, sampled_Y = get_equidistant_points(current_X, current_Y, next_X, next_Y, points_in_current_segment)
-        sample_points_X.extend(sampled_X)
-        sample_points_Y.extend(sampled_Y)
+        parts = round(total_parts*ratio)
 
-    return sample_points_X, sample_points_Y
+        # if we reach the last pair and are running short or overshooting the target adjust 
+        if index == length - 2:
+            if parts + current_total_parts != total_parts:
+                parts = total_parts - current_total_parts
+
+        current_total_parts += parts
+
+        sampled_X, sampled_Y = get_equidistant_points(current_X, current_Y, next_X, next_Y, parts)
+        sample_points_X.extend(sampled_X[:-1])
+        sample_points_Y.extend(sampled_Y[:-1])
+
+    sample_points_X.append(points_X[-1])
+    sample_points_Y.append(points_Y[-1])
+
+    # even if it overshoots just force it to 100!!!
+    return sample_points_X[:100], sample_points_Y[:100]
 
 
+# precompute this and store this on disk
 # Pre-sample every template
-template_sample_points_X, template_sample_points_Y = [], []
-for i in range(10000):
-    X, Y = generate_sample_points(template_points_X[i], template_points_Y[i])
-    template_sample_points_X.append(X)
-    template_sample_points_Y.append(Y)
+# template_sample_points_X, template_sample_points_Y = [], []
+# for i in range(10000):
+#     X, Y = generate_sample_points(template_points_X[i], template_points_Y[i])
+#     template_sample_points_X.append(X)
+#     template_sample_points_Y.append(Y)
 
 
 def do_pruning(gesture_points_X, gesture_points_Y, template_sample_points_X, template_sample_points_Y):
