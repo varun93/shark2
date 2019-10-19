@@ -164,7 +164,7 @@ def do_pruning(gesture_points_X, gesture_points_Y, template_sample_points_X, tem
         curr_template_X, curr_template_Y  = template_sample_points_X[index], template_sample_points_Y[index]
         start_x, start_y = curr_template_X[0], curr_template_Y[0] 
         end_x, end_y = curr_template_X[99], curr_template_Y[99] 
-        start_distance = calculate_distance(start_x, end_y, first_gesture_X, first_gesture_Y)
+        start_distance = calculate_distance(start_x, start_y, first_gesture_X, first_gesture_Y)
         end_distance = calculate_distance(end_x, end_y, last_gesture_X, last_gesture_Y)
 
         if start_distance <= threshold and end_distance <= threshold:
@@ -342,19 +342,21 @@ def shark2():
 
     gesture_sample_points_X, gesture_sample_points_Y = generate_sample_points(gesture_points_X, gesture_points_Y)
 
-    valid_words, valid_template_sample_points_X, valid_template_sample_points_Y = do_pruning(gesture_points_X, gesture_points_Y, template_sample_points_X, template_sample_points_Y)
+    # valid_words, valid_template_sample_points_X, valid_template_sample_points_Y = do_pruning(gesture_points_X, gesture_points_Y, template_sample_points_X, template_sample_points_Y)
 
-    shape_scores = get_shape_scores(gesture_sample_points_X, gesture_sample_points_Y, valid_template_sample_points_X, valid_template_sample_points_Y)
+    # print(valid_words)
 
-    location_scores = get_location_scores(gesture_sample_points_X, gesture_sample_points_Y, valid_template_sample_points_X, valid_template_sample_points_Y)
+    # shape_scores = get_shape_scores(gesture_sample_points_X, gesture_sample_points_Y, valid_template_sample_points_X, valid_template_sample_points_Y)
 
-    integration_scores = get_integration_scores(shape_scores, location_scores)
+    # location_scores = get_location_scores(gesture_sample_points_X, gesture_sample_points_Y, valid_template_sample_points_X, valid_template_sample_points_Y)
 
-    best_word = get_best_word(valid_words, integration_scores)
+    # integration_scores = get_integration_scores(shape_scores, location_scores)
 
-    end_time = time.time()
+    # best_word = get_best_word(valid_words, integration_scores)
 
-    return '{"best_word":"' + best_word + '", "elapsed_time":"' + str(round((end_time - start_time) * 1000, 5)) + 'ms"}'
+    # end_time = time.time()
+    return json.dumps({})
+    # return '{"best_word":"' + best_word + '", "elapsed_time":"' + str(round((end_time - start_time) * 1000, 5)) + 'ms"}'
 
 
 if __name__ == "__main__":
