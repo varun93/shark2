@@ -110,7 +110,7 @@ def generate_sample_points(points_X, points_Y):
         # if we reach the last pair and are running short or overshooting the target adjust 
         if index == length - 2:
             if parts + current_total_parts != total_parts:
-                parts = total_parts - current_total_parts
+                parts = max(total_parts - current_total_parts, 0)
 
         current_total_parts += parts
 
@@ -158,35 +158,35 @@ def do_pruning(gesture_points_X, gesture_points_Y, template_sample_points_X, tem
     '''
     valid_words, valid_template_sample_points_X, valid_template_sample_points_Y = [], [], []
     # TODO: Set your own pruning threshold
-    threshold = 10
+    threshold = 20
     # TODO: Do pruning (12 points)
 
     first_gesture_X, first_gesture_Y = gesture_points_X[0], gesture_points_Y[0]
     last_gesture_X, last_gesture_Y = gesture_points_X[99], gesture_points_Y[99]
 
     for index in range(len(template_sample_points_X)):
-        curr_template_X, curr_template_Y  = template_sample_points_X[index], template_sample_points_Y[index]
-        start_X, start_Y = curr_template_X[0], curr_template_Y[0] 
-        end_X, end_Y = curr_template_X[99], curr_template_Y[99] 
+        current_template_X, current_template_Y  = template_sample_points_X[index], template_sample_points_Y[index]
+        start_X, start_Y = current_template_X[0], current_template_Y[0] 
+        end_X, end_Y = current_template_X[99], current_template_Y[99] 
         start_distance = calculate_distance(start_X, start_Y, first_gesture_X, first_gesture_Y)
         end_distance = calculate_distance(end_X, end_Y, last_gesture_X, last_gesture_Y)
 
         if start_distance <= threshold and end_distance <= threshold:
-           valid_template_sample_points_X.append(curr_template_X)
-           valid_template_sample_points_Y.append(curr_template_Y)
+           valid_template_sample_points_X.append(current_template_X)
+           valid_template_sample_points_Y.append(current_template_Y)
            valid_words.append(words[index])
 
 
     return valid_words, valid_template_sample_points_X, valid_template_sample_points_Y
 
 # 
-def compute_pairwise_distance(template_X, template_Y, gesture_sample_points_X, gesture_sample_points_Y):
+def compute_pairwise_distance(current_template_X, current_template_Y, gesture_sample_points_X, gesture_sample_points_Y):
         
         distance = 0
         
-        for sample_index in range(sample_length):
+        for sample_index in range(100):
             template_X = current_template_X[sample_index]
-            template_Y = curr_template_Y[sample_index]
+            template_Y = current_template_Y[sample_index]
             gesture_X = gesture_sample_points_X[sample_index]
             gesture_Y = gesture_sample_points_Y[sample_index]
 
@@ -217,19 +217,11 @@ def get_shape_scores(gesture_sample_points_X, gesture_sample_points_Y, valid_tem
     L = 1
 
     # TODO: Calculate shape scores (12 points)
-
-    assert(len(gesture_sample_points_X) == len(gesture_sample_points_Y))
-    assert(len(valid_template_sample_points_X) == len(valid_template_sample_points_Y))
-    assert(len(gesture_sample_points_X) == len(valid_template_sample_points_X))
-
-    candidate_length = len(gesture_sample_points_X)
-    sample_length = 100
-    
-    for index in range(candidate_length):
-        current_template_X = valid_template_sample_points_X[index] 
+    for index in range(len(valid_template_sample_points_X)):
+        current_template_X = valid_template_sample_points_X[index]
         current_template_Y = valid_template_sample_points_Y[index]
-        pairwise_distance = compute_pairwise_distance(template_X, template_Y, gesture_sample_points_X, gesture_sample_points_Y)
-        shape_scores.append(pairwise_distance // sample_length)
+        pairwise_distance = compute_pairwise_distance(current_template_X, current_template_Y, gesture_sample_points_X, gesture_sample_points_Y)
+        shape_scores.append(pairwise_distance / 100)
 
     return shape_scores
 
@@ -256,26 +248,21 @@ def get_location_scores(gesture_sample_points_X, gesture_sample_points_Y, valid_
     radius = 15
     # TODO: Calculate location scores (12 points)
 
-    assert(len(gesture_sample_points_X) == len(gesture_sample_points_Y))
-    assert(len(valid_template_sample_points_X) == len(valid_template_sample_points_Y))
-    assert(len(gesture_sample_points_X) == len(valid_template_sample_points_X))
-
-    candidate_length = len(gesture_sample_points_X)
     sample_length = 100
     
-    for index in range(candidate_length):
-        current_template_X = valid_template_sample_points_X[index] 
+    for index in range(len(valid_template_sample_points_X)):
+        current_template_X = valid_template_sample_points_X[index]
         current_template_Y = valid_template_sample_points_Y[index]
 
         distance = 0
 
         for i in range(sample_length):
-            X, Y = current_template_X[i], curr_template_Y[i] 
+            X, Y = current_template_X[i], current_template_Y[i] 
             min_distance = float("inf")
             
             for j in range(sample_length):
-                template_X = current_template_X[sample_index]
-                template_Y = curr_template_Y[sample_index]
+                template_X = gesture_sample_points_X[j]
+                template_Y = gesture_sample_points_Y[j]
                 distance = calculate_distance(X, Y, template_X, template_Y)
                 min_distance = min(min_distance, distance) 
 
@@ -288,7 +275,7 @@ def get_location_scores(gesture_sample_points_X, gesture_sample_points_Y, valid_
 
         # now compute the pairwise distance between templates
         if distance != 0:
-            distance = compute_pairwise_distance(template_X, template_Y, gesture_sample_points_X, gesture_sample_points_Y)
+            distance = compute_pairwise_distance(current_template_X, current_template_Y, gesture_sample_points_X, gesture_sample_points_Y)
 
         location_scores.append(distance)
 
@@ -299,7 +286,7 @@ def get_integration_scores(shape_scores, location_scores):
     # TODO: Set your own shape weight
     shape_coef = 0.5
     # TODO: Set your own location weight
-    location_coef = 1.0
+    location_coef = 0.5
     for i in range(len(shape_scores)):
         integration_scores.append(shape_coef * shape_scores[i] + location_coef * location_scores[i])
     return integration_scores
@@ -316,13 +303,13 @@ def get_best_word(valid_words, integration_scores):
     :param integration_scores: A list of corresponding integration scores of valid_words.
     :return: The most probable word suggested to the user.
     '''
-    best_word = 'the'
     # TODO: Set your own range.
-    n = 5
+    n = 3
     # TODO: Get the best word (12 points)
-    integration_scores.sort()
+    zipped_list = list(zip(integration_scores, valid_words))
+    zipped_list.sort(key=lambda tuple: tuple[0])
 
-    return " ".join(best_word[:n])
+    return " ".join(list(map(lambda tuple : tuple[1], zipped_list))[:n])
 
 
 @app.route("/")
@@ -345,18 +332,14 @@ def shark2():
     gesture_sample_points_X, gesture_sample_points_Y = generate_sample_points(gesture_points_X, gesture_points_Y)
 
     valid_words, valid_template_sample_points_X, valid_template_sample_points_Y = do_pruning(gesture_sample_points_X, gesture_sample_points_Y, template_sample_points_X, template_sample_points_Y)
+    shape_scores = get_shape_scores(gesture_sample_points_X, gesture_sample_points_Y, valid_template_sample_points_X, valid_template_sample_points_Y)
+    location_scores = get_location_scores(gesture_sample_points_X, gesture_sample_points_Y, valid_template_sample_points_X, valid_template_sample_points_Y)
+    integration_scores = get_integration_scores(shape_scores, location_scores)
+    best_word = get_best_word(valid_words, integration_scores)
 
-    # shape_scores = get_shape_scores(gesture_sample_points_X, gesture_sample_points_Y, valid_template_sample_points_X, valid_template_sample_points_Y)
-
-    # location_scores = get_location_scores(gesture_sample_points_X, gesture_sample_points_Y, valid_template_sample_points_X, valid_template_sample_points_Y)
-
-    # integration_scores = get_integration_scores(shape_scores, location_scores)
-
-    # best_word = get_best_word(valid_words, integration_scores)
-
-    # end_time = time.time()
-    return json.dumps({})
-    # return '{"best_word":"' + best_word + '", "elapsed_time":"' + str(round((end_time - start_time) * 1000, 5)) + 'ms"}'
+    end_time = time.time()
+   
+    return '{"best_word":"' + best_word + '", "elapsed_time":"' + str(round((end_time - start_time) * 1000, 5)) + 'ms"}'
 
 
 if __name__ == "__main__":
