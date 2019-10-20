@@ -127,12 +127,11 @@ def generate_sample_points(points_X, points_Y):
 
 # precompute this and store this on disk
 # Pre-sample every template
-# template_sample_points_X, template_sample_points_Y = [], []
-# for i in range(10000):
-#     X, Y = generate_sample_points(template_points_X[i], template_points_Y[i])
-#     template_sample_points_X.append(X)
-#     template_sample_points_Y.append(Y)
-
+template_sample_points_X, template_sample_points_Y = [], []
+for i in range(10000):
+    X, Y = generate_sample_points(template_points_X[i], template_points_Y[i])
+    template_sample_points_X.append(X)
+    template_sample_points_Y.append(Y)
 
 def do_pruning(gesture_points_X, gesture_points_Y, template_sample_points_X, template_sample_points_Y):
     '''Do pruning on the dictionary of 10000 words.
@@ -159,27 +158,18 @@ def do_pruning(gesture_points_X, gesture_points_Y, template_sample_points_X, tem
     '''
     valid_words, valid_template_sample_points_X, valid_template_sample_points_Y = [], [], []
     # TODO: Set your own pruning threshold
-    threshold = 20
+    threshold = 10
     # TODO: Do pruning (12 points)
-
-    gestures_length_X = len(gesture_points_X) 
-    gestures_length_Y = len(gesture_points_Y) 
-    templates_length_X = len(template_points_X)
-    templates_length_Y = len(template_points_Y)
-
-    assert(gestures_length_X == gestures_length_Y)
-    assert(templates_length_X == template_points_Y)
-    assert(gestures_length_X == templates_length_X)
 
     first_gesture_X, first_gesture_Y = gesture_points_X[0], gesture_points_Y[0]
     last_gesture_X, last_gesture_Y = gesture_points_X[99], gesture_points_Y[99]
 
-    for index in range(templates_length_X):
+    for index in range(len(template_sample_points_X)):
         curr_template_X, curr_template_Y  = template_sample_points_X[index], template_sample_points_Y[index]
-        start_x, start_y = curr_template_X[0], curr_template_Y[0] 
-        end_x, end_y = curr_template_X[99], curr_template_Y[99] 
-        start_distance = calculate_distance(start_x, start_y, first_gesture_X, first_gesture_Y)
-        end_distance = calculate_distance(end_x, end_y, last_gesture_X, last_gesture_Y)
+        start_X, start_Y = curr_template_X[0], curr_template_Y[0] 
+        end_X, end_Y = curr_template_X[99], curr_template_Y[99] 
+        start_distance = calculate_distance(start_X, start_Y, first_gesture_X, first_gesture_Y)
+        end_distance = calculate_distance(end_X, end_Y, last_gesture_X, last_gesture_Y)
 
         if start_distance <= threshold and end_distance <= threshold:
            valid_template_sample_points_X.append(curr_template_X)
@@ -351,14 +341,10 @@ def shark2():
     for i in range(len(data)):
         gesture_points_X.append(data[i]['x'])
         gesture_points_Y.append(data[i]['y'])
-    gesture_points_X = [gesture_points_X]
-    gesture_points_Y = [gesture_points_Y]
 
     gesture_sample_points_X, gesture_sample_points_Y = generate_sample_points(gesture_points_X, gesture_points_Y)
 
-    # valid_words, valid_template_sample_points_X, valid_template_sample_points_Y = do_pruning(gesture_points_X, gesture_points_Y, template_sample_points_X, template_sample_points_Y)
-
-    # print(valid_words)
+    valid_words, valid_template_sample_points_X, valid_template_sample_points_Y = do_pruning(gesture_sample_points_X, gesture_sample_points_Y, template_sample_points_X, template_sample_points_Y)
 
     # shape_scores = get_shape_scores(gesture_sample_points_X, gesture_sample_points_Y, valid_template_sample_points_X, valid_template_sample_points_Y)
 

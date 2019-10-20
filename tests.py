@@ -49,6 +49,7 @@ def test_generate_sample_points():
 	# 	print(calculate_distance(currentX, currentY, nextX, nextY))
 
 
+
 test_path_length()
 test_equidistant_points()
 test_calculate_distance()
