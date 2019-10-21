@@ -29,7 +29,7 @@ def test_generate_sample_points():
 	# points_X = [170, 225, 100]
 	# points_Y = [50, 85, 50]
 
-	# #venue
+	# venue
 	points_X = [170, 100, 240, 240, 100]
 	points_Y = [120, 50, 120, 50, 50]
 

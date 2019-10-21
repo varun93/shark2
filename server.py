@@ -42,18 +42,18 @@ for line in content:
         template_points_Y[-1].append(centroids_Y[ord(c) - 97])
 
 
-
+''' Euclidean distance '''
 def calculate_distance(X1, Y1, X2, Y2):
     return math.sqrt((X2 - X1)**2 + (Y2 - Y1)**2)
 
 '''
  Uniformly Sample n points between two points  
- The below function is taken from https://stackoverflow.com/questions/47443037/equidistant-points-between-two-points-in-python
- with the change in function name 
+ The following function is taken from https://stackoverflow.com/questions/47443037/equidistant-points-between-two-points-in-python
 '''
 def get_equidistant_points(X1, Y1, X2, Y2, parts):
     return list(numpy.linspace(X1, X2, parts+1)), list(numpy.linspace(Y1, Y2, parts+1))
 
+''' Find the length of the path given its points '''
 def find_path_length(points_X, points_Y):
     
     length = len(points_X)
@@ -68,6 +68,22 @@ def find_path_length(points_X, points_Y):
 
     return distance
 
+''' Compute the distance given two templates '''
+def compute_pairwise_distance(current_template_X, current_template_Y, gesture_sample_points_X, gesture_sample_points_Y):
+        
+        distance = 0
+        
+        for index in range(100):
+            template_X = current_template_X[index]
+            template_Y = current_template_Y[index]
+            gesture_X = gesture_sample_points_X[index]
+            gesture_Y = gesture_sample_points_Y[index]
+
+            distance += calculate_distance(template_X, template_Y, gesture_X, gesture_Y)
+
+        return distance
+
+''' the sampled points are not totally equidistant but are approximately so  '''
 def generate_sample_points(points_X, points_Y):
     '''Generate 100 sampled points for a gesture.
 
@@ -117,17 +133,16 @@ def generate_sample_points(points_X, points_Y):
     sample_points_X.append(points_X[-1])
     sample_points_Y.append(points_Y[-1])
 
-    # even if it overshoots just force it to 100!!!
+    # even if it overshoots just force it to 100!
     return sample_points_X[:100], sample_points_Y[:100]
 
-
-# precompute this and store this on disk
 # Pre-sample every template
 template_sample_points_X, template_sample_points_Y = [], []
 for i in range(10000):
     X, Y = generate_sample_points(template_points_X[i], template_points_Y[i])
     template_sample_points_X.append(X)
     template_sample_points_Y.append(Y)
+
 
 def do_pruning(gesture_points_X, gesture_points_Y, template_sample_points_X, template_sample_points_Y):
     '''Do pruning on the dictionary of 10000 words.
@@ -175,20 +190,6 @@ def do_pruning(gesture_points_X, gesture_points_Y, template_sample_points_X, tem
 
     return valid_words, valid_template_sample_points_X, valid_template_sample_points_Y
 
-# 
-def compute_pairwise_distance(current_template_X, current_template_Y, gesture_sample_points_X, gesture_sample_points_Y):
-        
-        distance = 0
-        
-        for sample_index in range(100):
-            template_X = current_template_X[sample_index]
-            template_Y = current_template_Y[sample_index]
-            gesture_X = gesture_sample_points_X[sample_index]
-            gesture_Y = gesture_sample_points_Y[sample_index]
-
-            distance += calculate_distance(template_X, template_Y, gesture_X, gesture_Y)
-
-        return distance
 
 def get_shape_scores(gesture_sample_points_X, gesture_sample_points_Y, valid_template_sample_points_X, valid_template_sample_points_Y):
     '''Get the shape score for every valid word after pruning.
@@ -279,9 +280,9 @@ def get_location_scores(gesture_sample_points_X, gesture_sample_points_Y, valid_
 def get_integration_scores(shape_scores, location_scores):
     integration_scores = []
     # TODO: Set your own shape weight
-    shape_coef = 0.75
+    shape_coef = 0.9
     # TODO: Set your own location weight
-    location_coef = 0.25
+    location_coef = 0.1
     for i in range(len(shape_scores)):
         integration_scores.append(shape_coef * shape_scores[i] + location_coef * location_scores[i])
     return integration_scores
@@ -299,18 +300,20 @@ def get_best_word(valid_words, integration_scores):
     :return: The most probable word suggested to the user.
     '''
     # TODO: Set your own range.
-    n = 3
+    threshold = 5
     # TODO: Get the best word (12 points)
     zipped_list = list(zip(integration_scores, valid_words))
     zipped_list.sort(key=lambda tuple: tuple[0])
 
-    return " ".join(list(map(lambda tuple : tuple[1], zipped_list))[:n])
+    if len(zipped_list) > 0:
+        best_score = zipped_list[0][0]
+        return " ".join([tuple[1] for tuple in zipped_list if tuple[0] - best_score <= threshold])
 
+    return ""
 
 @app.route("/")
 def init():
     return render_template('index.html')
-
 
 @app.route('/shark2', methods=['POST'])
 def shark2():
