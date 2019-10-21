@@ -84,10 +84,6 @@ def generate_sample_points(points_X, points_Y):
     sample_points_X, sample_points_Y = [], []
     # result = []
     # TODO: Start sampling (12 points)
-
-    assert(len(points_X) == len(points_Y))
-    assert(len(points_X) >= 2)
-
     # get path length; avoid divide by zero errors
     path_length = max(0.0000001, find_path_length(points_X, points_Y))
 
@@ -158,7 +154,7 @@ def do_pruning(gesture_points_X, gesture_points_Y, template_sample_points_X, tem
     '''
     valid_words, valid_template_sample_points_X, valid_template_sample_points_Y = [], [], []
     # TODO: Set your own pruning threshold
-    threshold = 20
+    threshold = 15
     # TODO: Do pruning (12 points)
 
     first_gesture_X, first_gesture_Y = gesture_points_X[0], gesture_points_Y[0]
@@ -259,12 +255,11 @@ def get_location_scores(gesture_sample_points_X, gesture_sample_points_Y, valid_
         for i in range(sample_length):
             X, Y = current_template_X[i], current_template_Y[i] 
             min_distance = float("inf")
-            
             for j in range(sample_length):
                 template_X = gesture_sample_points_X[j]
                 template_Y = gesture_sample_points_Y[j]
-                distance = calculate_distance(X, Y, template_X, template_Y)
-                min_distance = min(min_distance, distance) 
+                template_distance = calculate_distance(X, Y, template_X, template_Y)
+                min_distance = min(min_distance, template_distance) 
 
             gamma_i = max(min_distance - radius, 0)
             
@@ -284,9 +279,9 @@ def get_location_scores(gesture_sample_points_X, gesture_sample_points_Y, valid_
 def get_integration_scores(shape_scores, location_scores):
     integration_scores = []
     # TODO: Set your own shape weight
-    shape_coef = 0.5
+    shape_coef = 0.75
     # TODO: Set your own location weight
-    location_coef = 0.5
+    location_coef = 0.25
     for i in range(len(shape_scores)):
         integration_scores.append(shape_coef * shape_scores[i] + location_coef * location_scores[i])
     return integration_scores
@@ -336,7 +331,6 @@ def shark2():
     location_scores = get_location_scores(gesture_sample_points_X, gesture_sample_points_Y, valid_template_sample_points_X, valid_template_sample_points_Y)
     integration_scores = get_integration_scores(shape_scores, location_scores)
     best_word = get_best_word(valid_words, integration_scores)
-
     end_time = time.time()
    
     return '{"best_word":"' + best_word + '", "elapsed_time":"' + str(round((end_time - start_time) * 1000, 5)) + 'ms"}'
